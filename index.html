@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>声鉴狮SJS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* 鸿蒙字体引入 */
+        @font-face {
+            font-family: 'HarmonyOS Sans';
+            src: local('HarmonyOS Sans'), 
+                 url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'HarmonyOS Sans', 'Noto Sans SC', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: #fff;
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* 登录界面水印样式 */
+        #login-container::before {
+            content: '声鉴狮';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 120px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.03);
+            pointer-events: none;
+            z-index: 1;
+            transform: rotate(-15deg);
+        }
+        
+        /* 登录界面样式 */
+        #login-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+        }
+        
+        .login-box {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .login-title {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 30px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #a777e3, #6e8efb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(167, 119, 227, 0.3);
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-family: inherit;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: rgba(167, 119, 227, 0.8);
+            box-shadow: 0 0 10px rgba(167, 119, 227, 0.3);
+        }
+        
+        .login-btn {
+            background: linear-gradient(135deg, #a777e3, #6e8efb);
+            border: none;
+            border-radius: 50px;
+            padding: 14px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(167, 119, 227, 0.4);
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(167, 119, 227, 0.6);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .error-message {
+            color: #ff4d4d;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            min-height: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .error-message.show {
+            opacity: 1;
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        /* 主应用容器 */
+        #main-app {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: transparent; /* 透明背景 */
+        }
+        
+        .container {
+            width: 90vw;
+            height: 180vw; /* 10:20比例 */
+            max-width: 400px;
+            max-height: 800px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 15px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* 居中显示 */
+            overflow: hidden;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .id-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50px;
+            padding: 4px;
+            position: relative;
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1;
+            font-size: 14px;
+        }
+        
+        .tab.active {
+            background: rgba(255, 255, 255, 0.25);
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* 声音鉴定卡样式 */
+        .voice-card-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .attributes-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .attribute {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            min-height: 70px;
+            max-height: 100px;
+        }
+        
+        .attribute-full {
+            grid-column: 1 / span 2;
+        }
+        
+        .attribute-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        
+        .attribute-icon {
+            width: 18px;
+            height: 18px;
+            margin-right: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        
+        .attribute-name {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .attribute-value {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .editable {
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
+            padding: 2px 0;
+            cursor: pointer;
+            min-height: 20px;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+        
+        .slider-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff4d4d;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 0 10px rgba(255, 77, 77, 0.5);
+        }
+        
+        .slider-value {
+            margin-left: 10px;
+            font-size: 14px;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .heart-btn {
+            background: none;
+            border: none;
+            color: #ff4d4d;
+            font-size: 18px;
+            margin-left: 8px;
+            cursor: pointer;
+            animation: heartbeat 1.5s infinite;
+        }
+        
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            5% { transform: scale(1.2); }
+            10% { transform: scale(1.1); }
+            15% { transform: scale(1.3); }
+            50% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+        
+        .feedback-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 120px;
+        }
+        
+        textarea {
+            flex: 1;
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 14px;
+            resize: none;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* 试音文案样式 */
+        .script-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .script-container {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .script-cards {
+            height: 100%;
+            position: relative;
+        }
+        
+        .script-card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            transform: translateY(20px) scale(0.9);
+            transition: all 0.5s ease;
+            text-align: center;
+            overflow-y: auto;
+        }
+        
+        .script-card.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            z-index: 10;
+        }
+        
+        .script-text {
+            font-size: 16px;
+            line-height: 1.8;
+            white-space: pre-line;
+        }
+        
+        .script-nav {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:active {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .random-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 50px;
+            padding: 12px 20px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .random-btn i {
+            margin-right: 8px;
+        }
+        
+        .random-btn:active {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        /* 置顶卡样式 */
+        .profile-card-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .profile-form-container {
+		    max-width: 400px;
+            max-height: 1200px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 15px;
+        }
+        
+		.card-footer-watermark {
+            position: absolute;
+            bottom: 21px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            font-style: italic;
+        }
+		
+		.card-footer1-watermark {
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.4);
+            font-style: italic;
+        }
+		
+        .profile-form {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-family: inherit;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+        
+        .checkbox-group input {
+            width: auto;
+            margin-right: 8px;
+        }
+        
+        .avatar-upload {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .avatar-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            margin-right: 15px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .upload-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 50px;
+            padding: 8px 15px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .premium-card {
+            background: linear-gradient(135deg, #6b00b3, #3a0080);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 4/8;
+            width: 100%;
+            max-width: 400px;
+            max-high: 800px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .premium-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .watermark {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.15);
+            transform: rotate(15deg);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .appraiser-info {
+		    position: absolute;
+            bottom: 25px;
+            left: 100px;
+            right: 100px;
+            text-align: center;
+            <!-- position: absolute; -->
+            <!-- top: 15px;          -->
+            <!-- left: 15px;         -->
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            <!-- background: rgba(0, 0, 0, 0.2);    -->
+            padding: 4px 6px;
+            border-radius: 12px;
+            <!-- font-style: italic;    -->
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+            margin-top: 30px;
+        }
+        
+        .card-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .card-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .card-user-info {
+            flex: 1;
+        }
+        
+        .card-nickname {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .card-id {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .card-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .card-attribute {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .card-attribute-name {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .card-attribute-value {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .card-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .change-bg-btn, .save-card-btn {
+            border: none;
+            border-radius: 50px;
+            padding: 10px 20px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .change-bg-btn {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .save-card-btn {
+            background: linear-gradient(135deg, #ff6bd8, #9c50e6);
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(156, 80, 230, 0.4);
+        }
+		
+		.show-card-btn {
+            border: none;
+            border-radius: 50px;
+            padding: 10px 20px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+		
+		.show-card-btn {
+            background: linear-gradient(135deg, #ff9a3d, #ff6b6b);
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+		
+		.upload-btn:hover {
+            transform: translateY(-2px);
+        }
+		
+		.show-card-btn:hover {
+            transform: translateY(-2px);
+        }
+		.save-card-btn:hover {
+            transform: translateY(-2px);
+        }
+		.change-bg-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .change-bg-btn:active, .save-card-btn:active {
+            transform: translateY(2px);
+        }
+		
+		.show-card-btn:active {
+            transform: translateY(2px);
+        }
+        
+		 /* 浮动卡片容器样式 */
+        .floating-card-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+        
+        .floating-card {
+            position: relative;
+            max-width: 90vw;
+            max-height: 240vh;
+            transition: transform 0.2s ease;
+            cursor: move;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            overflow: hidden;
+            transform-origin: center center;
+        }
+        
+        .floating-card img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 20px;
+        }
+        
+        .close-hint {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+            opacity: 0.7;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .footer {
+            padding: 12px;
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            background: rgba(0, 0, 0, 0.2);
+        }
+		
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录界面 -->
+    <div id="login-container">
+        <div class="login-box">
+            <h1 class="login-title">声鉴狮</h1>
+            <form class="login-form">
+                <div class="form-group">
+                    <label for="username">声鉴狮：</label>
+                    <input type="text" id="username" placeholder="请输入您的声鉴狮名称" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="password">密码：</label>
+                    <input type="password" id="password" placeholder="请输入密码" autocomplete="off">
+                </div>
+                <button type="submit" class="login-btn">登录</button>
+                <div class="error-message" id="error-message"></div>
+            </form>
+            <div class="login-footer">声鉴狮专业版 - 仅供授权用户使用</div>
+        </div>
+    </div>
+    
+    <!-- 主应用界面 -->
+    <div id="main-app">
+        <div class="container">
+            <div class="header">
+                <h1 class="title">声鉴狮：相思</h1>
+                <div class="id-label">ID：acawis</div>
+            </div>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="voice-card">声音鉴定</div>
+                <div class="tab" data-tab="script">试音文案</div>
+                <div class="tab" data-tab="profile-card">发声鉴卡</div>
+            </div>
+            
+            <div class="tab-content active" id="voice-card">
+                <div class="voice-card-content">
+                    <div class="attributes-grid">
+                        <div class="attribute">
+                            <div class="attribute-header">
+                                <div class="attribute-icon"><i class="fas fa-microphone"></i></div>
+                                <div class="attribute-name">主音色</div>
+                            </div>
+                            <div class="attribute-value editable" contenteditable="true">少女音</div>
+                        </div>
+                        
+                        <div class="attribute">
+                            <div class="attribute-header">
+                                <div class="attribute-icon"><i class="fas fa-wave-square"></i></div>
+                                <div class="attribute-name">辅音色</div>
+                            </div>
+                            <div class="attribute-value editable" contenteditable="true">幼齿音 鼻音</div>
+                        </div>
+                        
+                        <div class="attribute">
+                            <div class="attribute-header">
+                                <div class="attribute-icon"><i class="fas fa-star"></i></div>
+                                <div class="attribute-name">声线鉴定</div>
+                            </div>
+                            <div class="attribute-value editable" contenteditable="true">优质声线</div>
+                        </div>
+                        
+                        <div class="attribute">
+                            <div class="attribute-header">
+                                <div class="attribute-icon"><i class="fas fa-chart-line"></i></div>
+                                <div class="attribute-name">发展方向</div>
+                            </div>
+                            <div class="attribute-value editable" contenteditable="true">保持</div>
+                        </div>
+                        
+                        <div class="attribute">
+                            <div class="attribute-header">
+                                <div class="attribute-icon"><i class="fas fa-shield-alt"></i></div>
+                                <div class="attribute-name">攻受属性</div>
+                            </div>
+                            <div class="attribute-value editable" contenteditable="true">受</div>
+                        </div>
+                        
+                        <div class="attribute">
+                            <div class="attribute-header">
+                                <div class="attribute-icon"><i class="fas fa-robot"></i></div>
+                                <div class="attribute-name">人机感</div>
+                            </div>
+                            <div class="attribute-value editable" contenteditable="true">0%</div>
+                        </div>
+                        
+                        <div class="attribute">
+                            <div class="attribute-header">
+                                <div class="attribute-icon"><i class="fas fa-temperature-high"></i></div>
+                                <div class="attribute-name">声线温度</div>
+                            </div>
+                            <div class="attribute-value editable" contenteditable="true">暖</div>
+                        </div>
+                        
+                        <div class="attribute">
+                            <div class="attribute-header">
+                                <div class="attribute-icon"><i class="fas fa-user-friends"></i></div>
+                                <div class="attribute-name">推荐音伴</div>
+                            </div>
+                            <div class="attribute-value editable" contenteditable="true"></div>
+                        </div>
+                        
+                        <div class="attribute">
+                            <div class="attribute-header">
+                                <div class="attribute-icon"><i class="fas fa-birthday-cake"></i></div>
+                                <div class="attribute-name">听感年龄</div>
+                            </div>
+                            <div class="attribute-value editable" contenteditable="true">22</div>
+                        </div>
+                        
+                        <div class="attribute">
+                            <div class="attribute-header">
+                                <div class="attribute-icon"><i class="fas fa-heart"></i></div>
+                                <div class="attribute-name">网恋值</div>
+                            </div>
+                            <div class="attribute-value editable" contenteditable="true">9.5</div>
+                        </div>
+                        
+                        <div class="attribute attribute-full">
+                            <div class="attribute-header">
+                                <div class="attribute-icon"><i class="fas fa-heartbeat"></i></div>
+                                <div class="attribute-name">心动值</div>
+                            </div>
+                            <div class="slider-container">
+                                <div class="slider-wrapper">
+                                    <input type="range" min="0" max="100" value="100" class="slider" id="heartbeat-slider">
+                                    <div class="slider-value">100</div>
+                                </div>
+                                <button class="heart-btn">❤️</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="feedback-container">
+                        <div class="attribute-header">
+                            <div class="attribute-icon"><i class="fas fa-comment-dots"></i></div>
+                            <div class="attribute-name">听感反馈</div>
+                        </div>
+                        <textarea placeholder="请输入听感反馈">松弛的邻家妹妹~有点可爱~!有点内向~</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="script">
+                <div class="script-view">
+                    <div class="script-container">
+                        <div class="script-cards">
+                            <!-- 文案卡片将通过JS动态生成 -->
+                        </div>
+                    </div>
+                    
+                    <div class="script-nav">
+                        <button class="nav-btn prev-btn"><i class="fas fa-chevron-up"></i></button>
+                        <button class="nav-btn next-btn"><i class="fas fa-chevron-down"></i></button>
+                    </div>
+                    
+                    <button class="random-btn"><i class="fas fa-random"></i> 随机文案</button>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="profile-card">
+                <div class="profile-card-view">
+                    <div class="profile-form-container">
+                        <div class="profile-form">
+                            <div class="avatar-upload">
+                                <div class="avatar-preview" id="avatar-preview">
+                                    <i class="fas fa-user" style="font-size: 30px; color: rgba(255,255,255,0.5);"></i>
+                                </div>
+                                <input type="file" id="avatar-upload-input" accept="image/*" class="hidden">
+                                <button class="upload-btn" id="upload-btn">上传头像</button>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="nickname">昵称</label>
+                                <input type="text" id="nickname" placeholder="请输入您的昵称">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="user-id">ID</label>
+                                <input type="text" id="user-id" placeholder="请输入您的ID">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="id-private">
+                                    <label for="id-private">保密ID</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="premium-card" id="premium-card">
+                            <div class="watermark">声鉴卡</div>
+                            <!-- <div class="appraiser-info">声鉴狮：相思</div> -->
+                            
+                            <div class="card-header">
+                                <div class="card-avatar">
+                                    <img src="" id="card-avatar-img" class="hidden">
+                                    <i class="fas fa-user" id="card-avatar-icon" style="font-size: 30px; color: rgba(255,255,255,0.5);"></i>
+                                </div>
+                                <div class="card-user-info">
+                                    <div class="card-nickname" id="card-nickname">未设置昵称</div>
+                                    <div class="card-id" id="card-id">ID: 未设置</div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-content">
+                                <div class="card-attribute">
+                                    <div class="attribute-header">
+                                    <div class="attribute-icon"><i class="fas fa-microphone"></i></div>
+                                    <div class="attribute-name">主音色</div>
+                                    </div>
+                                    <div class="card-attribute-value" id="card-main-voice">少女音</div>
+                                </div>
+                                <div class="card-attribute">
+                                    <div class="attribute-header">
+                                        <div class="attribute-icon"><i class="fas fa-wave-square"></i></div>
+                                        <div class="attribute-name">辅音色</div>
+                                    </div>
+                                    <div class="card-attribute-value" id="card-sub-voice">幼齿音 鼻音</div>
+                                </div>
+                                <div class="card-attribute">
+                                     <div class="attribute-header">
+                                         <div class="attribute-icon"><i class="fas fa-star"></i></div>
+                                         <div class="attribute-name">声线鉴定</div>
+                                     </div>
+                                    <div class="card-attribute-value" id="card-voice-type">优质声线</div>
+                                </div>
+                                <div class="card-attribute">
+                                    <div class="attribute-header">
+                                        <div class="attribute-icon"><i class="fas fa-chart-line"></i></div>
+                                        <div class="attribute-name">发展方向</div>
+                                    </div>
+                                    <div class="card-attribute-value" id="card-direction">保持</div>
+                                </div>
+                                <div class="card-attribute">
+                                    <div class="attribute-header">
+                                        <div class="attribute-icon"><i class="fas fa-shield-alt"></i></div>
+                                        <div class="attribute-name">攻受属性</div>
+                                    </div>
+                                    <div class="card-attribute-value" id="card-attribute">受</div>
+                                </div>
+                                <div class="card-attribute">
+                                    <div class="attribute-header">
+                                        <div class="attribute-icon"><i class="fas fa-robot"></i></div>
+                                        <div class="attribute-name">人机感</div>
+                                    </div>
+                                    <div class="card-attribute-value" id="card-robot-feel">0%</div>
+                                </div>
+                                <div class="card-attribute">
+                                    <div class="attribute-header">
+                                        <div class="attribute-icon"><i class="fas fa-temperature-high"></i></div>
+                                        <div class="attribute-name">声线温度</div>
+                                    </div>
+                                    <div class="card-attribute-value" id="card-temperature">暖</div>
+                                </div>
+                                <div class="card-attribute">
+                                     <div class="attribute-header">
+                                         <div class="attribute-icon"><i class="fas fa-user-friends"></i></div>
+                                         <div class="attribute-name">推荐音伴</div>
+                                     </div>
+                                    <div class="card-attribute-value" id="card-partner"></div>
+                                </div>
+                                <div class="card-attribute">
+                                    <div class="attribute-header">
+                                        <div class="attribute-icon"><i class="fas fa-birthday-cake"></i></div>
+                                        <div class="attribute-name">听感年龄</div>
+                                    </div>
+                                    <div class="card-attribute-value" id="card-age">22</div>
+                                </div>
+                                <div class="card-attribute">
+                                    <div class="attribute-header">
+                                        <div class="attribute-icon"><i class="fas fa-heart"></i></div>
+                                        <div class="attribute-name">网恋值</div>
+                                    </div>
+                                    <div class="card-attribute-value" id="card-love-value">9.5</div>
+                                </div>
+                                <div class="card-attribute">
+                                    <div class="attribute-header">
+                                        <div class="attribute-icon"><i class="fas fa-heartbeat"></i></div>
+                                        <div class="attribute-name">心动值</div>
+                                    </div>
+                                    <div class="card-attribute-value" id="card-heart-value">100</div>
+                                </div>
+                                <div class="card-attribute">
+                                    <div class="attribute-header">
+                                        <div class="attribute-icon"><i class="fas fa-comment-dots"></i></div>
+                                        <div class="attribute-name">听感反馈</div>
+                                    </div>
+                                    <div class="card-attribute-value" id="card-feedback">松弛的邻家妹妹~有点可爱~!有点内向~</div>
+                                </div>
+								</br> 
+							
+                            </div>
+ 
+                            <div class="appraiser-info">声鉴狮🦁相思</div>
+							<!-- <div class="card-footer-watermark">声鉴狮：欢欢</div> -->
+                            <div class="card-footer1-watermark">技术支持 © 相思互娱</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-buttons">
+                        <input type="file" id="bg-upload-input" accept="image/*" class="hidden">
+                        <button class="change-bg-btn" id="change-bg-btn">更换背景</button>
+                        <button class="show-card-btn" id="show-card-btn">发卡</button>
+                        <button class="save-card-btn" id="save-card-btn">保存卡片</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 浮动卡片容器 -->
+    <div class="floating-card-container" id="floating-card-container">
+        <div class="floating-card" id="floating-card">
+            <img id="floating-card-img" src="" alt="发声鉴卡">
+			
+        </div>
+            <div class="close-hint">双击关闭</div>
+    </div>
+    <script>
+        // 登录功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginContainer = document.getElementById('login-container');
+            const mainApp = document.getElementById('main-app');
+            const loginForm = document.querySelector('.login-form');
+            const errorMessage = document.getElementById('error-message');
+            
+            // 登录表单提交事件
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value;
+                
+                // 验证登录信息
+                if (username === '相思' && password === '123456') {
+                    // 登录成功
+                    loginContainer.style.display = 'none';
+                    mainApp.style.display = 'block';
+                    
+                    // 设置网页背景为透明
+                    document.body.style.background = 'transparent';
+                } else {
+                    // 登录失败
+                    errorMessage.textContent = '用户未授权，请联系开发者微信：acawis';
+                    errorMessage.classList.add('show');
+                    
+                    // 3秒后隐藏错误消息
+                    setTimeout(() => {
+                        errorMessage.classList.remove('show');
+                    }, 3000);
+                }
+            });
+            
+            // 页签切换功能
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.getAttribute('data-tab');
+                    
+                    // 切换活跃页签
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(target).classList.add('active');
+                    
+                    // 切换到置顶卡时更新卡片内容
+                    if (target === 'profile-card') {
+                        updatePremiumCard();
+                    }
+                });
+            });
+            
+            // 心动值滑块功能
+            const heartSlider = document.getElementById('heartbeat-slider');
+            const heartValue = document.querySelector('.slider-value');
+            const heartBtn = document.querySelector('.heart-btn');
+            
+            heartSlider.addEventListener('input', function() {
+                const value = Math.round(this.value);
+                heartValue.textContent = value;
+                
+                // 更新卡片中的心动值
+                document.getElementById('card-heart-value').textContent = value;
+            });
+            
+            heartBtn.addEventListener('click', function() {
+                heartSlider.value = 100;
+                heartValue.textContent = '100';
+                document.getElementById('card-heart-value').textContent = '100';
+            });
+            
+            // 可编辑字段同步到卡片
+            const editableFields = document.querySelectorAll('.editable');
+            editableFields.forEach(field => {
+                field.addEventListener('blur', function() {
+                    updatePremiumCard();
+                });
+            });
+            
+            // 听感反馈同步到卡片
+            const feedbackTextarea = document.querySelector('textarea');
+            feedbackTextarea.addEventListener('blur', function() {
+                document.getElementById('card-feedback').textContent = this.value;
+            });
+            
+            // 试音文案数据
+            const scripts = [
+                "报告宝宝\n汇报一下今日份工作\n上午有点想你\n下午持续想你\n因受到高温影响\n晚上转为超级想你\n汇报完毕",
+                "烦死了 你明明是我的\n干嘛总和别人讲话啊\n能不能不要跟别人讲话了\n求求你了 宝宝~",
+                "说你喜欢我想我\n需要我\n缠着我\n我很吃这套的",
+                "如果注定要分别\n那相遇的意义是什么\n相遇的意义是被你改变的那一部分我\n将代替你永远陪在我的身边",
+                "哥哥晚上好\n欢迎继续收听\n你的月亮我的心\n好恋人就是我\n我就是你的耳边。。。小情人~",
+                "原则上呢我是不喜欢跟小笨蛋一起玩的\n但是 如果是你的话\n就算你是智障 你是脑瘫 是小王八\n我都愿意和你一起玩~",
+                "爱确实是突然降临的\n可当爱还不是爱的时候\n它应该叫什么呢\n我想也许是晚安",
+                "就把你变成我的玩具吧\n反正都是我的\n就算玩坏了也没有关系吧对不对啊\n小狗",
+                "你总是灰蒙蒙的\n说自己没那么好\n可是你存在的每一秒\n我都视若珍宝",
+                "靠北啦 不想聊就不想聊拜什么臭架子\n觉得自己很nb吗觉得自己很好看吗\n巧了 我也这么觉得的\n明天再继续做你的小舔狗叭 我的臭宝~",
+                "你怎么遇到点小事就哭啊\n这么脆弱的话\n和蛋挞有什么区别\n那你肯定很好吃\n好可爱\n喜欢你",
+                "你是近处的灯火\n也是遥远的星河\n你是我安稳岁月里的节外生枝\n是我所有的少女情怀和心之所向"
+            ];
+            
+            // 生成文案卡片
+            const scriptCardsContainer = document.querySelector('.script-cards');
+            let currentCardIndex = 0;
+            
+            scripts.forEach((script, index) => {
+                const card = document.createElement('div');
+                card.className = 'script-card';
+                if (index === 0) card.classList.add('active');
+                
+                const text = document.createElement('div');
+                text.className = 'script-text';
+                text.textContent = script;
+                
+                card.appendChild(text);
+                scriptCardsContainer.appendChild(card);
+            });
+            
+            const scriptCards = document.querySelectorAll('.script-card');
+            
+            // 导航按钮功能
+            const prevBtn = document.querySelector('.prev-btn');
+            const nextBtn = document.querySelector('.next-btn');
+            const randomBtn = document.querySelector('.random-btn');
+            
+            function showCard(index) {
+                scriptCards.forEach(card => card.classList.remove('active'));
+                scriptCards[index].classList.add('active');
+                currentCardIndex = index;
+            }
+            
+            prevBtn.addEventListener('click', () => {
+                let newIndex = currentCardIndex - 1;
+                if (newIndex < 0) newIndex = scripts.length - 1;
+                showCard(newIndex);
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                let newIndex = currentCardIndex + 1;
+                if (newIndex >= scripts.length) newIndex = 0;
+                showCard(newIndex);
+            });
+            
+            randomBtn.addEventListener('click', () => {
+                let newIndex;
+                do {
+                    newIndex = Math.floor(Math.random() * scripts.length);
+                } while (newIndex === currentCardIndex && scripts.length > 1);
+                
+                showCard(newIndex);
+            });
+            
+            // 添加触摸滑动支持
+            let touchStartY = 0;
+            let touchEndY = 0;
+            
+            scriptCardsContainer.addEventListener('touchstart', e => {
+                touchStartY = e.changedTouches[0].screenY;
+            });
+            
+            scriptCardsContainer.addEventListener('touchend', e => {
+                touchEndY = e.changedTouches[0].screenY;
+                handleSwipe();
+            });
+            
+            function handleSwipe() {
+                const diff = touchEndY - touchStartY;
+                
+                // 滑动距离阈值
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0) {
+                        // 向下滑动 - 上一页
+                        let newIndex = currentCardIndex - 1;
+                        if (newIndex < 0) newIndex = scripts.length - 1;
+                        showCard(newIndex);
+                    } else {
+                        // 向上滑动 - 下一页
+                        let newIndex = currentCardIndex + 1;
+                        if (newIndex >= scripts.length) newIndex = 0;
+                        showCard(newIndex);
+                    }
+                }
+            }
+            
+            // 添加鼠标滚轮支持
+            scriptCardsContainer.addEventListener('wheel', e => {
+                if (e.deltaY > 0) {
+                    // 向下滚动 - 下一页
+                    let newIndex = currentCardIndex + 1;
+                    if (newIndex >= scripts.length) newIndex = 0;
+                    showCard(newIndex);
+                } else {
+                    // 向上滚动 - 上一页
+                    let newIndex = currentCardIndex - 1;
+                    if (newIndex < 0) newIndex = scripts.length - 1;
+                    showCard(newIndex);
+                }
+                
+                // 阻止默认滚动行为
+                e.preventDefault();
+            });
+            
+            // 头像上传功能
+            const avatarUploadInput = document.getElementById('avatar-upload-input');
+            const uploadBtn = document.getElementById('upload-btn');
+            const avatarPreview = document.getElementById('avatar-preview');
+            const cardAvatarImg = document.getElementById('card-avatar-img');
+            const cardAvatarIcon = document.getElementById('card-avatar-icon');
+            
+            uploadBtn.addEventListener('click', () => {
+                avatarUploadInput.click();
+            });
+            
+            avatarUploadInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        // 更新预览
+                        avatarPreview.innerHTML = '';
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        avatarPreview.appendChild(img);
+                        
+                        // 更新卡片头像
+                        cardAvatarImg.src = e.target.result;
+                        cardAvatarImg.classList.remove('hidden');
+                        cardAvatarIcon.classList.add('hidden');
+                    };
+                    
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+            
+            // 昵称输入同步到卡片
+            const nicknameInput = document.getElementById('nickname');
+            const cardNickname = document.getElementById('card-nickname');
+            
+            nicknameInput.addEventListener('input', function() {
+                cardNickname.textContent = this.value || '未设置昵称';
+            });
+            
+            // ID输入和保密功能
+            const userIdInput = document.getElementById('user-id');
+            const idPrivateCheckbox = document.getElementById('id-private');
+            const cardId = document.getElementById('card-id');
+            
+            userIdInput.addEventListener('input', function() {
+                updateIdDisplay();
+            });
+            
+            idPrivateCheckbox.addEventListener('change', function() {
+                updateIdDisplay();
+            });
+            
+            function updateIdDisplay() {
+                const userId = userIdInput.value.trim();
+                if (idPrivateCheckbox.checked) {
+                    cardId.textContent = 'ID: ***保密***';
+                } else {
+                    cardId.textContent = userId ? `ID: ${userId}` : 'ID: 未设置';
+                }
+            }
+            
+            // 更新置顶卡内容
+            function updatePremiumCard() {
+                document.getElementById('card-main-voice').textContent = document.querySelector('.attribute:nth-child(1) .attribute-value').textContent;
+                document.getElementById('card-sub-voice').textContent = document.querySelector('.attribute:nth-child(2) .attribute-value').textContent;
+                document.getElementById('card-voice-type').textContent = document.querySelector('.attribute:nth-child(3) .attribute-value').textContent;
+                document.getElementById('card-direction').textContent = document.querySelector('.attribute:nth-child(4) .attribute-value').textContent;
+                document.getElementById('card-attribute').textContent = document.querySelector('.attribute:nth-child(5) .attribute-value').textContent;
+                document.getElementById('card-robot-feel').textContent = document.querySelector('.attribute:nth-child(6) .attribute-value').textContent;
+                document.getElementById('card-temperature').textContent = document.querySelector('.attribute:nth-child(7) .attribute-value').textContent;
+                document.getElementById('card-partner').textContent = document.querySelector('.attribute:nth-child(8) .attribute-value').textContent;
+                document.getElementById('card-age').textContent = document.querySelector('.attribute:nth-child(9) .attribute-value').textContent;
+                document.getElementById('card-love-value').textContent = document.querySelector('.attribute:nth-child(10) .attribute-value').textContent;
+                document.getElementById('card-heart-value').textContent = document.querySelector('.slider-value').textContent;
+                document.getElementById('card-feedback').textContent = document.querySelector('textarea').value;
+                
+                updateIdDisplay();
+            }
+            
+            // 更换背景功能
+            const bgUploadInput = document.getElementById('bg-upload-input');
+            const changeBgBtn = document.getElementById('change-bg-btn');
+            const premiumCard = document.getElementById('premium-card');
+            
+            changeBgBtn.addEventListener('click', () => {
+                bgUploadInput.click();
+            });
+            
+            bgUploadInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        // 设置卡片背景
+                        premiumCard.style.backgroundImage = `url(${e.target.result})`;
+                        premiumCard.style.backgroundSize = 'cover';
+                        premiumCard.style.backgroundPosition = 'center';
+                    };
+                    
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+            
+            // 保存卡片功能
+            const saveCardBtn = document.getElementById('save-card-btn');
+            
+            saveCardBtn.addEventListener('click', function() {
+                // 使用html2canvas将卡片转换为图片
+                html2canvas(premiumCard, {
+                    backgroundColor: null,
+                    scale: 2 // 提高分辨率
+                }).then(canvas => {
+                    // 创建一个临时链接用于下载
+                    const link = document.createElement('a');
+                    
+                    // 获取当前时间作为默认文件名
+                    const now = new Date();
+                    const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
+                    
+                    link.download = `声鉴卡_${timestamp}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+            });
+			
+			
+			// 发卡功能 - 显示浮动卡片
+			const showCardBtn = document.getElementById('show-card-btn');
+			const floatingContainer = document.getElementById('floating-card-container');
+            const floatingCard = document.getElementById('floating-card');
+            const floatingCardImg = document.getElementById('floating-card-img');
+            
+			showCardBtn.addEventListener('click', function() {
+             
+            html2canvas(premiumCard, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: null
+            }).then(canvas => {
+                
+                
+                // 将canvas转换为图片URL
+                floatingCardImg.src = canvas.toDataURL('image/png');
+                
+                // 显示浮动容器
+                floatingContainer.style.display = 'flex';
+                
+                // 初始化浮动卡片位置和缩放
+                floatingCard.style.transform = 'scale(1)';
+                floatingCard.style.left = '0px';
+                floatingCard.style.top = '0px';
+                
+                // 设置双击关闭事件
+                floatingCard.ondblclick = function() {
+                    floatingContainer.style.display = 'none';
+                };
+                
+                // 拖拽功能
+                let isDragging = false;
+                let startX, startY, initialX, initialY;
+                
+                floatingCard.addEventListener('mousedown', function(e) {
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    initialX = parseInt(floatingCard.style.left) || 0;
+                    initialY = parseInt(floatingCard.style.top) || 0;
+                    
+                    // 防止文本选中
+                    e.preventDefault();
+                });
+                
+                document.addEventListener('mousemove', function(e) {
+                    if (!isDragging) return;
+                    
+                    const deltaX = e.clientX - startX;
+                    const deltaY = e.clientY - startY;
+                    
+                    floatingCard.style.left = (initialX + deltaX) + 'px';
+                    floatingCard.style.top = (initialY + deltaY) + 'px';
+                });
+                
+                document.addEventListener('mouseup', function() {
+                    isDragging = false;
+                });
+                
+                // 缩放功能
+                floatingCard.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    
+                    const scaleFactor = 0.1;
+                    const currentScale = parseFloat(floatingCard.style.transform.replace('scale(', '').replace(')', '')) || 1;
+                    let newScale;
+                    
+                    if (e.deltaY < 0) {
+                        // 向上滚动，放大
+                        newScale = currentScale + scaleFactor;
+                    } else {
+                        // 向下滚动，缩小
+                        newScale = Math.max(0.5, currentScale - scaleFactor);
+                    }
+                    
+                    floatingCard.style.transform = `scale(${newScale})`;
+                });
+            });
+        });
+			
+			        
+        });
+		
+    </script>
+</body>
+</html>
