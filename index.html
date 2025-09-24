@@ -747,7 +747,7 @@
             margin-top: 15px;
         }
         
-        .change-bg-btn, .save-card-btn {
+        .change-bg-btn0, .change-bg-btn, .save-card-btn {
             border: none;
             border-radius: 50px;
             padding: 10px 20px;
@@ -757,7 +757,7 @@
             transition: all 0.3s ease;
         }
         
-        .change-bg-btn {
+        .change-bg-btn0, .change-bg-btn {
             background: rgba(255, 255, 255, 0.15);
         }
         
@@ -793,11 +793,11 @@
 		.save-card-btn:hover {
             transform: translateY(-2px);
         }
-		.change-bg-btn:hover {
+		.change-bg-btn0:hover, .change-bg-btn:hover  {
             transform: translateY(-2px);
         }
         
-        .change-bg-btn:active, .save-card-btn:active {
+        .change-bg-btn0:active, .change-bg-btn:active, .save-card-btn:active {
             transform: translateY(2px);
         }
 		
@@ -1182,9 +1182,10 @@
                     
                     <div class="card-buttons">
                         <input type="file" id="bg-upload-input" accept="image/*" class="hidden">
-                        <button class="change-bg-btn" id="change-bg-btn">更换背景</button>
+                        <button class="change-bg-btn0" id="change-bg-btn0">换色</button>
+                        <button class="change-bg-btn" id="change-bg-btn">换图</button>
                         <button class="show-card-btn" id="show-card-btn">发卡</button>
-                        <button class="save-card-btn" id="save-card-btn">保存卡片</button>
+                        <button class="save-card-btn" id="save-card-btn">存卡</button>
                     </div>
                 </div>
             </div>
@@ -1485,7 +1486,24 @@
                 
                 updateIdDisplay();
             }
+            // 更换背景色功能
+			const changeBgBtn0 = document.getElementById('change-bg-btn0');
+			
+            changeBgBtn0.addEventListener('click', function() {
+            const backgrounds = [
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                'linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)',
+                'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)'
+				];
             
+				const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+				document.getElementById('premium-card').style.background = randomBg;
+            });
             // 更换背景功能
             const bgUploadInput = document.getElementById('bg-upload-input');
             const changeBgBtn = document.getElementById('change-bg-btn');
